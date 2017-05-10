@@ -11,10 +11,11 @@
 open System
 open System.IO
 open System.Text.RegularExpressions
-open Chessie.ErrorHandling // per adesso inglobato come sorgente
+open Chessie.ErrorHandling
 open Common
 open BtAdvisor
 open UvetAmex
+open Cisalpina
 open FSharp.Data
 open FSharp.Data.SqlClient
 
@@ -38,7 +39,7 @@ let postFromStaging (opt:CommandLineOprtions) =
 // --------------------------------------------------------------------------
 
 /// Parsa un pattern di parametri fatto così
-/// program -f Nomefile [-t csv | excel | UAExcel] [-a idadv] [-p idparte] [-v] [-post periodo anno]
+/// program -f Nomefile [-t csv | excel | UAExcel | CExcel] [-a idadv] [-p idparte] [-v] [-post periodo anno]
 let parseCommandLine args = 
     // Helper recursive parsing function
     let rec parse args optionsSoFar = 
@@ -80,7 +81,7 @@ let parseCommandLine args =
         | "-f" :: xs ->
             match xs with
             | fileName :: xss ->
-                let newOptionsSoFar = {optionsSoFar with file = fileName}
+                let newOptionsSoFar = { optionsSoFar with file = System.IO.Path.GetFullPath(fileName) }
                 parse xss newOptionsSoFar
             | _ ->
                 eprintfn "-f vuole un nome di file"   
@@ -96,6 +97,9 @@ let parseCommandLine args =
                 parse xss newOptionsSoFar
             | "csv" :: xss ->
                 let newOptionsSoFar = {optionsSoFar with fileFormat = Csv}
+                parse xss newOptionsSoFar
+            | "CExcel" :: xss ->
+                let newOptionsSoFar = {optionsSoFar with fileFormat = CExcel}
                 parse xss newOptionsSoFar
             | _ ->
                 eprintfn "Formato non riconosciuto, si assume Csv"   
@@ -122,13 +126,13 @@ let parseCommandLine args =
 
     let defaultOptions = {
         verbose = TerseOutput;
-        file = "C:\Users\imaffioli.SDGITALY\Desktop\BTAdvisor\pippo.xls";
-        fileFormat = UAExcel;
-        idadv = 1;
-        idparte = 1;
+        file = "C:\Users\imaffioli.SDGITALY\Desktop\BTAdvisor\KPMG_2016.xls";
+        fileFormat = CExcel;
+        idadv = 5;
+        idparte = 125;
         operazione = Staging;
         periodo = 0;
-        anno = 2017
+        anno = 2016
     }
 
     if List.length args = 0 then 
@@ -155,7 +159,7 @@ let main argv =
                  | Csv     -> checkFileExists options >>= readCsv >>= postCsvData options >>= postFromStaging
                  | Excel   -> checkFileExists options >>= readExcel >>= postExcelData options >>= postFromStaging
                  | UAExcel -> checkFileExists options >>= readUAExcel >>= postUAExcelData options >>= postFromStaging
-                 | CExcel  -> checkFileExists options >>=
+                 | CExcel  -> checkFileExists options >>= readCExcelSheets >>= postCExcel options >>= postFromStaging
 
     match result with
     | Ok _ -> verboseOutput options.verbose " Elaborazione terminata" ; 0
