@@ -4,6 +4,7 @@
 ///
 module UvetAmex
     open System
+    open System.Configuration
     open System.Text.RegularExpressions
     open FSharp.ExcelProvider
     open Common
@@ -99,7 +100,7 @@ module UvetAmex
             // salta eventuali righe vuote
             let rows = t.Data |> Seq.where (fun x -> not <| isNull x.``cd Cliente``)
     
-            use cmd = new SqlCommandProvider<sqlCmd, targetConnectionString, AllParametersOptional = true>(targetConnectionString)
+            use cmd = new InsertCmd(Settings.ConnectionStrings.BtAdvisor) 
             let count = rows |> Seq.length
             use pbar = new ProgressBar(count+1, "Scrittura sul DB",ConsoleColor.Yellow)
             for row in rows do
@@ -173,10 +174,6 @@ module UvetAmex
                         channnel        = mapChannel row.``ds Tipo Prenotazione`` , 
                         loaddate        = Some DateTime.Today)
                 pbar.Tick("Scrittura dati sul DB in corso ... ")
-            // post processing
-            // use cmdPost = new SqlCommandProvider<updSqlCmd, targetConnectionString, AllParametersOptional = true>(targetConnectionString)
-            // pbar.Tick("Post Processing... ")
-            // cmdPost.Execute() |> ignore
             opt
         tryF post_ DbUpdateFailure   
             

@@ -9,10 +9,11 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>BTAdvisorETL</RootNamespace>
     <AssemblyName>BTAdvisorETL</AssemblyName>
-    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <TargetFSharpCoreVersion>4.4.0.0</TargetFSharpCoreVersion>
     <Name>BTAdvisorETL</Name>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -61,7 +62,9 @@
     <Compile Include="Common.fs" />
     <Compile Include="BtAdvisor.fs" />
     <Compile Include="UvetAmex.fs" />
-    <Compile Include="Cisalpina.fs" />
+    <Compile Include="Cisalpina.old.fs" />
+    <Compile Include="Cisalpina.new.fs" />
+    <Compile Include="Bcd.fs" />
     <Compile Include="Program.fs" />
     <None Include="App.config" />
     <Content Include="packages.config" />
@@ -77,6 +80,8 @@
       <Isolated>False</Isolated>
       <WrapperTool>primary</WrapperTool>
     </COMReference>
+    <None Include="Cisalpina_Passenger.xls" />
+    <None Include="BCD.xlsx" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Chessie">
@@ -89,6 +94,10 @@
     </Reference>
     <Reference Include="ExcelProvider">
       <HintPath>..\packages\ExcelProvider.0.8.1\lib\ExcelProvider.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="FSharp.Configuration">
+      <HintPath>..\packages\FSharp.Configuration.1.1.0\lib\net46\FSharp.Configuration.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="FSharp.Core">
@@ -112,6 +121,10 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="mscorlib" />
+    <Reference Include="SharpYaml">
+      <HintPath>..\packages\FSharp.Configuration.1.1.0\lib\net46\SharpYaml.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="ShellProgressBar">
       <HintPath>..\packages\ShellProgressBar.3.0.0.0\lib\NET4\ShellProgressBar.dll</HintPath>
       <Private>True</Private>

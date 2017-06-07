@@ -2,9 +2,10 @@
 /// Modulo che contiene il codice per caricare nella staging area un foglio excel
 /// nel formato utilizzato da kpmg
 ///
-module Cisalpina
+module Cisalpina.oldExcel
 
     open System
+    open System.Configuration
     open System.Text.RegularExpressions
     open FSharp.ExcelProvider
     open Common
@@ -39,23 +40,6 @@ module Cisalpina
         Car: CisalpinaCarDS;
         Rai: CisalpinaRaiDS;
     }
-
-// --------------------------------------------------------------------------
-
-    // Il foglio excel con i dati potrebbe non contenere tutti i servizi.
-    // La librera principale di accesso ai dati excel restituisce come default
-    // il primo foglio se nella dichiarazione di tipo viene indicato un foglio inesistente.
-    // Inoltre non consente l'enumerazione dei fogli presenti nel workbook perciò
-    // si utilizza in questa piccola porzione, la libreria interop di Microsoft.
-
-    /// Determina i fogli che ci sono
-    let getSheets opt =
-        let xlApp = new Excel.ApplicationClass() 
-        let xlWorkBook = xlApp.Workbooks.Open(opt.file)
-        let wse = xlWorkBook.Worksheets
-        let wsl = [ for s in wse -> (s:?> Excel.Worksheet).Name ]
-        xlWorkBook.Close()
-        wsl
 
 // --------------------------------------------------------------------------
 
@@ -114,7 +98,7 @@ module Cisalpina
         // salta eventuali righe vuote e dei totali
         let rows = t.Data |> Seq.where (fun x -> not <| isNull x.``Issuing Date``)
    
-        use cmd = new SqlCommandProvider<sqlCmd, targetConnectionString, AllParametersOptional = true>(targetConnectionString)
+        use cmd = new InsertCmd(Settings.ConnectionStrings.BtAdvisor) 
         let count = rows |> Seq.length
         use pbar = new ProgressBar(count, "Scrittura sheet Air sul DB",ConsoleColor.Yellow)
         for row in rows do
@@ -186,7 +170,7 @@ module Cisalpina
                                                  (not <| isNull x.Hotel) &&
                                                  (not <| isNull x.In))
     
-        use cmd = new SqlCommandProvider<sqlCmd, targetConnectionString, AllParametersOptional = true>(targetConnectionString)
+        use cmd = new InsertCmd(Settings.ConnectionStrings.BtAdvisor)
         let count = rows |> Seq.length
         use pbar = new ProgressBar(count, "Scrittura sheet Hotel sul DB" ,ConsoleColor.Yellow)
         for row in rows do
@@ -251,7 +235,7 @@ module Cisalpina
         // salta eventuali righe vuote e dei totali
         let rows = t.Data |> Seq.where (fun x -> not <| isNull x.``Issuing Date``)
     
-        use cmd = new SqlCommandProvider<sqlCmd, targetConnectionString, AllParametersOptional = true>(targetConnectionString)
+        use cmd = new InsertCmd(Settings.ConnectionStrings.BtAdvisor)
         let count = rows |> Seq.length
         use pbar = new ProgressBar(count, "Scrittura sheet Railway sul DB", ConsoleColor.Yellow)
         for row in rows do
@@ -316,7 +300,7 @@ module Cisalpina
         // salta eventuali righe vuote e dei totali
         let rows = t.Data |> Seq.where (fun x -> not <| isNull x.``Issuing Date``)
     
-        use cmd = new SqlCommandProvider<sqlCmd, targetConnectionString, AllParametersOptional = true>(targetConnectionString)
+        use cmd = new InsertCmd(Settings.ConnectionStrings.BtAdvisor)
         let count = rows |> Seq.length
         use pbar = new ProgressBar(count, "Scrittura sheet Car sul DB",ConsoleColor.Yellow)
         for row in rows do
@@ -382,9 +366,9 @@ module Cisalpina
             let rec post_ sl = 
                 match sl with
                 | []              -> opt
-                | "Air" :: xs     -> post_ xs //postCisalpinaExcelAirData opt wb.Air; post_ xs
-                | "Hotel" :: xs   -> post_ xs //postCisalpinaExcelHotData opt wb.Hot; post_ xs
-                | "Car" :: xs     -> post_ xs //postCisalpinaExcelCarData opt wb.Car; post_ xs
+                | "Air" :: xs     -> postCisalpinaExcelAirData opt wb.Air; post_ xs
+                | "Hotel" :: xs   -> postCisalpinaExcelHotData opt wb.Hot; post_ xs
+                | "Car" :: xs     -> postCisalpinaExcelCarData opt wb.Car; post_ xs
                 | "Railway" :: xs -> postCisalpinaExcelRaiData opt wb.Rai; post_ xs
                 | _ :: xs         -> post_ xs
             post_ (getSheets opt)  // si potrebbe salvare il risultato intermedio di questo per non farlo due volte

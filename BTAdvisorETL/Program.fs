@@ -16,6 +16,7 @@ open Common
 open BtAdvisor
 open UvetAmex
 open Cisalpina
+open Bcd
 open FSharp.Data
 open FSharp.Data.SqlClient
 
@@ -23,7 +24,7 @@ open FSharp.Data.SqlClient
 let postFromStaging (opt:CommandLineOprtions) =
     let post_ () =
         if opt.operazione = Completa then
-            use cmd = new Btadvisor.dbo.LoadTransactionData(targetConnectionString)
+            use cmd = new Btadvisor.dbo.LoadTransactionData(Settings.ConnectionStrings.BtAdvisor)
             verboseOutput opt.verbose "Post dati da staging nelle tabelle definitive ..."
             // Result contiene il numero di record affected.
             // Nel caso la sp non torna nulla e inizia con un set nocount on
@@ -98,8 +99,14 @@ let parseCommandLine args =
             | "csv" :: xss ->
                 let newOptionsSoFar = {optionsSoFar with fileFormat = Csv}
                 parse xss newOptionsSoFar
+            | "CExcelOld" :: xss ->
+                let newOptionsSoFar = {optionsSoFar with fileFormat = CExcelOld}
+                parse xss newOptionsSoFar
             | "CExcel" :: xss ->
                 let newOptionsSoFar = {optionsSoFar with fileFormat = CExcel}
+                parse xss newOptionsSoFar
+            | "BCDExcel" :: xss ->
+                let newOptionsSoFar = {optionsSoFar with fileFormat = BCDExcel}
                 parse xss newOptionsSoFar
             | _ ->
                 eprintfn "Formato non riconosciuto, si assume Csv"   
@@ -126,17 +133,17 @@ let parseCommandLine args =
 
     let defaultOptions = {
         verbose = TerseOutput;
-        file = "C:\Users\imaffioli.SDGITALY\Desktop\BTAdvisor\KPMG_2016.xls";
-        fileFormat = CExcel;
-        idadv = 5;
-        idparte = 125;
+        file = "C:\Users\imaffioli.SDGITALY\Desktop\BTAdvisor\denora_2016.xlsx";
+        fileFormat = BCDExcel;
+        idadv = 6;
+        idparte = 126;
         operazione = Staging;
         periodo = 0;
         anno = 2016
     }
 
     if List.length args = 0 then 
-        eprintfn "uso: BTAdvisorETL -f Nomefile [-t csv | excel | UAexcel | CExcel] [-a idadv] [-p idparte] [-v] [-post periodo anno]"
+        eprintfn "uso: BTAdvisorETL -f Nomefile [-t csv | excel | UAexcel | CExcel | BCDExcel] [-a idadv] [-p idparte] [-v] [-post periodo anno]"
         eprintfn "utilizza le opzioni di default "
         defaultOptions
     else 
@@ -156,10 +163,30 @@ let checkFileExists opt =
 let main argv =
     let options = argv |> List.ofArray |> parseCommandLine
     let result = match options.fileFormat with
-                 | Csv     -> checkFileExists options >>= readCsv >>= postCsvData options >>= postFromStaging
-                 | Excel   -> checkFileExists options >>= readExcel >>= postExcelData options >>= postFromStaging
-                 | UAExcel -> checkFileExists options >>= readUAExcel >>= postUAExcelData options >>= postFromStaging
-                 | CExcel  -> checkFileExists options >>= readCExcelSheets >>= postCExcel options >>= postFromStaging
+                 | Csv       -> checkFileExists options 
+                                >>= readCsv 
+                                >>= postCsvData options 
+                                >>= postFromStaging
+                 | Excel     -> checkFileExists options 
+                                >>= readExcel 
+                                >>= postExcelData options 
+                                >>= postFromStaging
+                 | UAExcel   -> checkFileExists options 
+                                >>= readUAExcel 
+                                >>= postUAExcelData options 
+                                >>= postFromStaging
+                 | BCDExcel  -> checkFileExists options 
+                                >>= readBCDExcel 
+                                >>= postBCDExcelData options 
+                                >>= postFromStaging
+                 | CExcel    -> checkFileExists options 
+                                >>= Cisalpina.newExcel.readCExcelSheets 
+                                >>= Cisalpina.newExcel.postCExcel options 
+                                >>= postFromStaging
+                 | CExcelOld -> checkFileExists options 
+                                >>= Cisalpina.oldExcel.readCExcelSheets 
+                                >>= Cisalpina.oldExcel.postCExcel options 
+                                >>= postFromStaging
 
     match result with
     | Ok _ -> verboseOutput options.verbose " Elaborazione terminata" ; 0

@@ -15,6 +15,16 @@ module TryParser
     let parseDouble  = tryParseWith System.Double.TryParse
     let parseDecimal = tryParseWith System.Decimal.TryParse
 
+
+    // Per parsare delle date con formato specifico
+    let parseDateWithFormat dateString format =
+        try
+            let dd = System.DateTime.ParseExact(dateString, format, null)
+            Some dd
+        with 
+            | :? System.FormatException as ex -> None
+       
+            
     /// Tryparse decimal con . come separatore decimale
     /// Utile perché excel type provider restituisce i decimali con quel separatore
     let parseDecimalX str =

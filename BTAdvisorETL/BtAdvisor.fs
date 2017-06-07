@@ -4,6 +4,7 @@
 ///
 module BtAdvisor
     open System
+    open System.Configuration
     open FSharp.ExcelProvider
     open Common
     open ShellProgressBar 
@@ -58,7 +59,7 @@ module BtAdvisor
     /// Salva i dati del file CSV nella tabella di staging effettuando opportune trasformazioni sui dati
     let postCsvData opt (t:DataSource) =
         let post_ () = 
-            use cmd = new SqlCommandProvider<sqlCmd, targetConnectionString, AllParametersOptional = true>(targetConnectionString)
+            use cmd = new InsertCmd(Settings.ConnectionStrings.BtAdvisor) 
             let count = t.Rows |> Seq.length
             use pbar = new ProgressBar(count, "Scrittura sul DB",ConsoleColor.Yellow)
             for row in t.Rows do            
@@ -121,7 +122,7 @@ module BtAdvisor
             // salta eventuali righe vuote
             let rows = t.Data |> Seq.where (fun x -> not <| isNull x.TransactionType)
     
-            use cmd = new SqlCommandProvider<sqlCmd, targetConnectionString, AllParametersOptional = true>(targetConnectionString)
+            use cmd = new InsertCmd(Settings.ConnectionStrings.BtAdvisor)
             let count = rows |> Seq.length
             use pbar = new ProgressBar(count, "Scrittura sul DB",ConsoleColor.Yellow)
             for row in rows do
