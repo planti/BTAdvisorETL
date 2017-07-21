@@ -20,7 +20,7 @@ module Bcd
     let mapTransacrtionType bgtRimborso tipoTariffa =
         match bgtRimborso with
         | "Y" -> Some "Refund"
-        | "N" when (Regex.Match(tipoTariffa, "^Ticket Re-Issue")).Success -> Some "NewEmisson"
+        | "N" when (Regex.Match(tipoTariffa, "^Ticket Re-Issue")).Success -> Some "NewEmission"
         | "N" 
         | _ -> Some "Emission"
 
@@ -39,6 +39,8 @@ module Bcd
         | "Ferroviario Elettronico" -> Some "OneWay"
         | _ -> None
 
+// --------------------------------------------------------------------------
+     
     let adjustRailRouting originalRouting destination =
         // se il routing ha una barra sola
         if Regex.Match(originalRouting, "^[\w\s,.]+/[\w\s,.]+$").Success then
@@ -88,6 +90,7 @@ module Bcd
                                           | "Aereo"                   
                                           | "Ferroviario Elettronico" -> Some "Eticket"
                                           | "Low Cost" -> Some "LowCost"
+                                          | "Ferroviario" -> Some "Paper"
                                           | _ -> None), 
                         departuredate   = parseDateWithFormat row.Data_Partenza "MM/dd/yyyy hh:mm:ss", 
                         supplier        = (match row.TpServizioDettaglio with
@@ -99,15 +102,17 @@ module Bcd
                                           | "Low Cost" -> Some row.Partenza_Cod
                                           | "Hotel"    -> Some row.Destinazione
                                           | _          -> Some row.Citta_Partenza),
-                        origincountrycd = None,                       
+                        origincountrycd = (match row.TpServizioDettaglio with
+                                          | "Hotel"    -> Some row.Nazione
+                                          | _          -> None),                       
                         destination     = (match row.TpServizioDettaglio with
                                           | "Aereo"   
                                           | "Low Cost" -> Some row.Destinazione_Cod
                                           | "Hotel"    -> None
                                           | _          -> Some row.Destinazione),                        
                         destcountrycd   = (match row.TpServizioDettaglio with
-                                          | "Hotel" -> None
-                                          | _       -> Some row.Nazione),
+                                          | "Hotel"    -> None
+                                          | _          -> Some row.Nazione),
                         htladdress      = None, 
                         htlzip          = None, 
                         routing         = (match row.TpServizioDettaglio with
@@ -143,12 +148,12 @@ module Bcd
                                                 | "ITALY" -> Some "Domestic"
                                                 | _ -> Some "International"), 
                                         // Dopo telefonata con Dario
-                        fullfare        = (match (parseDecimalX row.``Importo Commissionabile`` , parseDecimalX row.Saving) with
-                                          | (Some x , Some y) -> Some (x+y)
-                                          | (Some x , None) -> Some x
-                                          | (None , Some y) -> Some 0.0M
-                                          | _ -> Some 0.0M), 
-                                        // Non c'è lo fisso all'importo pagato
+                                        // Non è possibile stabilire il valore del full fare e del low fare
+                                        // neanche ricorrendo al reason
+                                        // fisso tutto uguale
+                        fullfare        = (match parseDecimalX row.``Importo Commissionabile`` with
+                                          | Some x -> Some x
+                                          | None -> Some 0.0M), 
                         lowfare         = (match parseDecimalX row.``Importo Commissionabile`` with
                                           | Some x -> Some x
                                           | None -> Some 0.0M),  

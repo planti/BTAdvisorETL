@@ -40,7 +40,7 @@ let postFromStaging (opt:CommandLineOprtions) =
 // --------------------------------------------------------------------------
 
 /// Parsa un pattern di parametri fatto così
-/// program -f Nomefile [-t csv | excel | UAExcel | CExcel] [-a idadv] [-p idparte] [-v] [-post periodo anno]
+/// program -f Nomefile [-t csv | excel | UAExcel | CExcel ... ] [-a idadv] [-p idparte] [-v] [-post periodo anno]
 let parseCommandLine args = 
     // Helper recursive parsing function
     let rec parse args optionsSoFar = 
@@ -137,13 +137,16 @@ let parseCommandLine args =
         fileFormat = BCDExcel;
         idadv = 6;
         idparte = 126;
-        operazione = Staging;
+        operazione = Completa;
         periodo = 0;
         anno = 2016
     }
 
     if List.length args = 0 then 
-        eprintfn "uso: BTAdvisorETL -f Nomefile [-t csv | excel | UAexcel | CExcel | BCDExcel] [-a idadv] [-p idparte] [-v] [-post periodo anno]"
+        eprintfn "uso: BTAdvisorETL -f Nomefile "
+        eprintfn "                 [-t csv | excel | UAexcel | CExcel | BCDExcel | CExcelOld] "
+        eprintfn "                 [-a idadv] [-p idparte] [-post periodo anno]"
+        eprintfn "                 [-v]"
         eprintfn "utilizza le opzioni di default "
         defaultOptions
     else 
