@@ -133,11 +133,11 @@ let parseCommandLine args =
 
     let defaultOptions = {
         verbose = TerseOutput;
-        file = "C:\Users\imaffioli.SDGITALY\Desktop\BTAdvisor\denora_2016.xlsx";
-        fileFormat = BCDExcel;
-        idadv = 6;
-        idparte = 126;
-        operazione = Completa;
+        file = "C:\Users\imaffioli.SDGITALY\Desktop\BTAdvisor\AON.xls";
+        fileFormat = CExcel;
+        idadv = 5;
+        idparte = 134;
+        operazione = Staging;
         periodo = 0;
         anno = 2016
     }
